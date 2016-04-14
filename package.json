@@ -1,0 +1,34 @@
+{
+  "name": "yom-file-uploader",
+  "version": "0.1.0",
+  "description": "File uploader",
+  "keywords": [
+    "File uploader"
+  ],
+  "homepage": "https://github.com/webyom/yom-file-uploader",
+  "author": {
+    "name": "Gary Wang",
+    "email": "webyom@gmail.com",
+    "url": "http://webyom.org"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/webyom/yom-file-uploader.git"
+  },
+  "bugs": {
+    "url": "https://github.com/webyom/yom-file-uploader/issues"
+  },
+  "license": "MIT",
+  "main": "lib/index.js",
+  "typings": "src/yom-file-uploader.d.ts",
+  "engines": {
+    "node": ">= 0.8.0"
+  },
+  "scripts": {},
+  "dependencies": {
+  },
+  "devDependencies": {
+    "gulp": "^3.8.5",
+    "gulp-amd-bundler": "^0.2.1"
+  }
+}
