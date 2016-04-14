@@ -76,9 +76,10 @@ $.extend(FileUploader.prototype, {
 	_init: function() {
 		if(this._holder.length) {
 			this._area = $([
-				'<div style="width: 100%; height: 100%; padding: 0; margin: 0; overflow: hidden; cursor: pointer; background-image: url(about:blank); position: relative;">',
+				'<div style="position: absolute; left: 0; top: 0; width: 100%; height: 100%; padding: 0; margin: 0; overflow: hidden; background-image: url(about:blank);">',
 				'</div>'
 			].join('')).appendTo(this._holder);
+			this._holder.css({position: 'relative'});
 			this._enableFileBrowser && this._createFileInput();
 			this._bindEvent();
 		}
@@ -218,7 +219,7 @@ $.extend(FileUploader.prototype, {
 					form.append(key, val);
 				});
 			}
-			(feedback.xhrGetter || function(callback) {callback();})(function(xhr) {
+			(feedback.xhrGetter || function(callback) {callback();})(function(xhr, headers) {
 				xhr = xhr || new XMLHttpRequest();
 				xhr.onload = function() {
 					var res;
@@ -257,6 +258,13 @@ $.extend(FileUploader.prototype, {
 					};
 				}
 				xhr.open('post', url, true);
+				if(headers) {
+					for(var key in headers) {
+						if(headers.hasOwnProperty(key)) {
+							xhr.setRequestHeader(key, headers[key]);
+						}
+					}
+				}
 				xhr.withCredentials = true;
 				xhr.send(form);
 			});
