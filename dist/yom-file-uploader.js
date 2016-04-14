@@ -59,6 +59,7 @@ var FileUploader = function(holder, opt) {
 	this._url = opt.url || '';
 	this._fileParamName = opt.fileParamName || 'file';
 	this._onBeforeUpload = opt.onBeforeUpload || this._onBeforeUpload;
+	this._toBeUploaded = null;
 	this._uploadings = [];
 	this._bind = {
 		click: function(evt) {return self._onClick(evt);},
@@ -111,7 +112,15 @@ $.extend(FileUploader.prototype, {
 
 	_onDrop: function(evt) {
 		evt.preventDefault();
-		this.uploadByDropFile(evt.originalEvent.dataTransfer.files);
+		var files = evt.originalEvent.dataTransfer.files;
+		if(this._opt.onPreview) {
+			this._toBeUploaded = {
+				files: files
+			};
+			this._opt.onPreview(this._toBeUploaded);
+		} else {
+			this.uploadByDropFile(files);
+		}
 		if(this._opt.onDrop) {
 			this._opt.onDrop(evt);
 		}
@@ -121,9 +130,24 @@ $.extend(FileUploader.prototype, {
 		var fileInput = this._removeFileInput();
 		this._createFileInput();
 		if(this._enableDropFile && FileUploader.dropFileSupported) {
-			this.uploadByDropFile(fileInput[0].files);
+			var files = fileInput[0].files;
+			if(this._opt.onPreview) {
+				this._toBeUploaded = {
+					files: files
+				};
+				this._opt.onPreview(this._toBeUploaded);
+			} else {
+				this.uploadByDropFile(files);
+			}
 		} else {
-			this.uploadByFileInput(fileInput);
+			if(this._opt.onPreview) {
+				this._toBeUploaded = {
+					fileInput: fileInput
+				};
+				this._opt.onPreview(this._toBeUploaded);
+			} else {
+				this.uploadByFileInput(fileInput);
+			}
 		}
 	},
 
@@ -270,6 +294,17 @@ $.extend(FileUploader.prototype, {
 				xhr.send(form);
 			});
 		});
+	},
+	
+	upload: function() {
+		if(this._toBeUploaded) {
+			if(this._toBeUploaded.files) {
+				this.uploadByDropFile(this._toBeUploaded.files);
+			} else if(this._toBeUploaded.fileInput) {
+				this.uploadByFileInput(this._toBeUploaded.fileInput);
+			}
+			this._toBeUploaded = null;
+		}
 	},
 
 	uploadByDropFile: function(files) {
