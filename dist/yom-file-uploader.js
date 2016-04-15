@@ -67,7 +67,8 @@ var FileUploader = function(holder, opt) {
 		dragenter: function(evt) {return self._onDragenter(evt);},
 		dragleave: function(evt) {return self._onDragleave(evt);},
 		drop: function(evt) {return self._onDrop(evt);},
-		fileChange: function(evt) {return self._onFileChange(evt);}
+		fileChange: function(evt) {return self._onFileChange(evt);},
+		fileClick: function(evt) {return self._onFileClick(evt);}
 	};
 	this._init();
 };
@@ -151,6 +152,19 @@ $.extend(FileUploader.prototype, {
 		}
 	},
 
+	_onFileClick: function(evt) {
+		if(!window.ActiveXObject) {
+			return;
+		}
+		var target = evt.target;
+		var fileClick = this._bind.fileClick;
+		setTimeout(function() {
+			$(target).off('click', fileClick);
+			target.click();
+			$(target).on('click', fileClick);
+		}, 0);
+	},
+
 	_bindEvent: function() {
 		this._area.on('click', this._bind.click);
 		if(this._enableDropFile && FileUploader.dropFileSupported) {
@@ -193,7 +207,7 @@ $.extend(FileUploader.prototype, {
 			opacity: '0',
 			filter: 'Alpha(Opacity="0")'
 		});
-		this._fileInput.on('change', this._bind.fileChange);
+		this._fileInput.on('change', this._bind.fileChange).on('click', this._bind.fileClick);
 		this._fileInput.appendTo(this._opt.inputHolder || this._area);
 	},
 
@@ -357,6 +371,7 @@ $.extend(FileUploader.prototype, {
 			}
 			form[0].submit();
 			if(onProgress) {
+				iframe && onProgress(uploading, 0);
 				if(progressGetter) {
 					setTimeout(function getProgress() {
 						iframe && progressGetter(uploading, function(progress) {
