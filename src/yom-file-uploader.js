@@ -15,6 +15,8 @@ function _simulateProgress(lastProgress, startTime, callback) {
 	}, interval);
 };
 
+var _uploadingCount = 0;
+
 var Uploading = function(id, fileName, from, fileSize) {
 	this.id = id;
 	this.from = from;
@@ -222,13 +224,20 @@ $.extend(FileUploader.prototype, {
 	},
 
 	_getNewUploading: function(fileName, from, fileSize) {
-		var uid = this._uploadings.length;
-		var uploading = new Uploading(uid, fileName, from, fileSize);
+		var id = _uploadingCount++;
+		var uploading = new Uploading(id, fileName, from, fileSize);
 		return uploading;
 	},
 
 	_removeUploading: function(uploading) {
-		this._uploadings[uploading.uid] = null;
+		var uploadings = this._uploadings;
+		if(uploadings) {
+			for(var i = 0; i < uploadings.length; i++) {
+				if(uploadings[i].id == uploading.id) {
+					return uploadings.splice(i, 1);
+				}
+			}
+		}
 	},
 
 	_onBeforeUpload: function(uploading, callback) {
@@ -304,6 +313,10 @@ $.extend(FileUploader.prototype, {
 					}
 				}
 				xhr.withCredentials = true;
+				uploading.abort = function() {
+					xhr.abort();
+					uploading.abort = function() {};
+				};
 				xhr.send(form);
 				progress || onProgress && onProgress(uploading, progress);
 			});
@@ -368,17 +381,20 @@ $.extend(FileUploader.prototype, {
 					form.append($('<input type="hidden" name="' + key + '" value="' + val + '" />'));
 				});
 			}
+			uploading.abort = function() {
+				clear();
+				uploading.abort = function() {};
+			};
 			form[0].submit();
 			if(onProgress) {
 				iframe && onProgress(uploading, 0);
 				if(progressGetter) {
 					setTimeout(function getProgress() {
 						iframe && progressGetter(uploading, function(progress) {
-							if(!iframe) {
-								return;
+							if(iframe) {
+								onProgress(uploading, progress);
+								setTimeout(getProgress, progressInterval);
 							}
-							onProgress(uploading, progress);
-							setTimeout(getProgress, progressInterval);
 						});
 					}, progressInterval);
 				} else {
@@ -418,6 +434,12 @@ $.extend(FileUploader.prototype, {
 		this._holder = null;
 		this._area = null;
 		this._fileInput = null;
+		this._toBeUploaded = null;
+		this._onBeforeUpload = null;
+		$.each(this._uploadings, function(i, uploading) {
+			uploading.abort();
+		});
+		this._uploadings = null;
 	}
 });
 
