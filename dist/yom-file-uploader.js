@@ -273,9 +273,9 @@ $.extend(FileUploader.prototype, {
 					self._removeUploading(uploading);
 					onComplete && onComplete(uploading);
 				};
+				var progress = 0;
 				if(onProgress) {
 					xhr.upload.onprogress = function(evt) {
-						var progress = 0;
 						if(evt.loaded > 0 && evt.total > 0) {
 							progress = Math.min(parseInt(evt.loaded / evt.total * 100), 100);
 						}
@@ -292,6 +292,7 @@ $.extend(FileUploader.prototype, {
 				}
 				xhr.withCredentials = true;
 				xhr.send(form);
+				progress || onProgress && onProgress(uploading, progress);
 			});
 		});
 	},
