@@ -1,10 +1,13 @@
 {
   "name": "yom-file-uploader",
-  "version": "0.1.5",
+  "version": "0.1.6",
   "description": "File uploader",
   "keywords": [
     "File uploader"
   ],
+  "scripts": {
+    "build": "./node_modules/rollup/bin/rollup -c"
+  },
   "homepage": "https://github.com/webyom/yom-file-uploader",
   "author": {
     "name": "Gary Wang",
@@ -24,11 +27,10 @@
   "engines": {
     "node": ">= 0.8.0"
   },
-  "scripts": {},
   "dependencies": {
+    "jquery": "^3.2.1"
   },
   "devDependencies": {
-    "gulp": "^3.8.5",
-    "gulp-amd-bundler": "^0.2.1"
+    "rollup": "^0.41.6"
   }
 }

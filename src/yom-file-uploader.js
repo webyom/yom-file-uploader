@@ -1,4 +1,4 @@
-var $ = window.jQuery || window.$;
+import $ from 'jquery';
 
 function _simulateProgress(lastProgress, startTime, callback) {
 	var interval = 3000;
@@ -47,7 +47,7 @@ var Uploading = function(id, fileName, from, fileSize) {
  * 	onError: {Function}
  * }
  */
-var FileUploader = function(holder, opt) {
+var YomFileUploader = function(holder, opt) {
 	var self = this;
 	opt = opt || {};
 	this._opt = opt;
@@ -74,9 +74,9 @@ var FileUploader = function(holder, opt) {
 	this._init();
 };
 
-FileUploader.dropFileSupported = 'File' in window && 'FormData' in window;
+YomFileUploader.dropFileSupported = 'File' in window && 'FormData' in window;
 
-$.extend(FileUploader.prototype, {
+$.extend(YomFileUploader.prototype, {
 	_init: function() {
 		if(this._holder.length) {
 			this._area = $([
@@ -131,7 +131,7 @@ $.extend(FileUploader.prototype, {
 	_onFileChange: function(evt) {
 		var fileInput = this._removeFileInput();
 		this._createFileInput();
-		if(this._enableDropFile && FileUploader.dropFileSupported) {
+		if(this._enableDropFile && YomFileUploader.dropFileSupported) {
 			var files = fileInput[0].files;
 			if(this._opt.onPreview) {
 				this._toBeUploaded = {
@@ -168,7 +168,7 @@ $.extend(FileUploader.prototype, {
 
 	_bindEvent: function() {
 		this._area.on('click', this._bind.click);
-		if(this._enableDropFile && FileUploader.dropFileSupported) {
+		if(this._enableDropFile && YomFileUploader.dropFileSupported) {
 			this._area.on('dragover', this._bind.dragover);
 			this._area.on('dragenter', this._bind.dragenter);
 			this._area.on('dragleave', this._bind.dragleave);
@@ -178,7 +178,7 @@ $.extend(FileUploader.prototype, {
 
 	_unbindEvent: function() {
 		this._area.off('click', this._bind.click);
-		if(this._enableDropFile && FileUploader.dropFileSupported) {
+		if(this._enableDropFile && YomFileUploader.dropFileSupported) {
 			this._area.off('dragover', this._bind.dragover);
 			this._area.off('dragenter', this._bind.dragenter);
 			this._area.off('dragleave', this._bind.dragleave);
@@ -191,7 +191,7 @@ $.extend(FileUploader.prototype, {
 		this._fileInput = $([
 			'<input type="file" ',
 				'name="' + this._fileParamName + '" ',
-				this._enableMultipleSelection && FileUploader.dropFileSupported ? 'multiple' : 'single',
+				this._enableMultipleSelection && YomFileUploader.dropFileSupported ? 'multiple' : 'single',
 			' />'
 		].join(''));
 		this._fileInput.css({
@@ -443,4 +443,4 @@ $.extend(FileUploader.prototype, {
 	}
 });
 
-module.exports = FileUploader;
+export default YomFileUploader;
