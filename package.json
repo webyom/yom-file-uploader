@@ -31,6 +31,7 @@
     "jquery": "^3.2.1"
   },
   "devDependencies": {
-    "rollup": "^0.41.6"
+    "rollup": "^0.41.6",
+    "rollup-plugin-mt2amd": "^1.0.3"
   }
 }
