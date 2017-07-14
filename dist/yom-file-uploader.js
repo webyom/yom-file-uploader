@@ -137,7 +137,7 @@ $.extend(YomFileUploader.prototype, {
 	_onFileChange: function(evt) {
 		var fileInput = this._removeFileInput();
 		this._createFileInput();
-		if(this._enableDropFile && YomFileUploader.dropFileSupported) {
+		if(YomFileUploader.dropFileSupported) {
 			var files = fileInput[0].files;
 			if(this._opt.onPreview) {
 				this._toBeUploaded = {
@@ -431,6 +431,14 @@ $.extend(YomFileUploader.prototype, {
 				onComplete && onComplete(uploading);
 			}
 		});
+	},
+
+	getToBeUploaded: function() {
+		return this._toBeUploaded;
+	},
+
+	clear: function() {
+		this._toBeUploaded = null;
 	},
 
 	destroy: function() {
