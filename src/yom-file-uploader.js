@@ -17,10 +17,11 @@ function _simulateProgress(lastProgress, startTime, callback) {
 
 var _uploadingCount = 0;
 
-var Uploading = function(id, fileName, from, fileSize) {
+var Uploading = function(id, fileName, from, file) {
 	this.id = id;
 	this.from = from;
-	this.fileSize = fileSize;
+	this.file = file;
+	this.fileSize = file && file.size;
 	this.fileName = fileName.replace(/\\/g, '/').split('/').pop();
 	this.fileExtName = this.fileName.split('.').pop();
 	if(this.fileExtName == this.fileName) {
@@ -223,9 +224,9 @@ $.extend(YomFileUploader.prototype, {
 		return res;
 	},
 
-	_getNewUploading: function(fileName, from, fileSize) {
+	_getNewUploading: function(fileName, from, file) {
 		var id = _uploadingCount++;
-		var uploading = new Uploading(id, fileName, from, fileSize);
+		var uploading = new Uploading(id, fileName, from, file);
 		return uploading;
 	},
 
@@ -250,13 +251,14 @@ $.extend(YomFileUploader.prototype, {
 		var onLoad = this._opt.onLoad;
 		var onError = this._opt.onError;
 		var onComplete = this._opt.onComplete;
-		var uploading = this._getNewUploading(file.name, 'DROP', file.size);
+		var uploading = this._getNewUploading(file.name, 'DROP', file);
 		this._onBeforeUpload(uploading, function(feedback) {
 			var form, url;
 			if(feedback === false) {
 				return;
 			}
 			feedback = feedback || {};
+			file = feedback.file || file;
 			self._uploadings.push(uploading);
 			url = feedback.url || self._url;
 			form = new FormData();
