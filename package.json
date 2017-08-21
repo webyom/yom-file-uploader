@@ -32,6 +32,6 @@
   },
   "devDependencies": {
     "rollup": "^0.41.6",
-    "rollup-plugin-mt2amd": "^1.0.3"
+    "rollup-plugin-mt2amd": "^1.3.0"
   }
 }
