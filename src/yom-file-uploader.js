@@ -43,9 +43,13 @@ var Uploading = function(id, fileName, from, file) {
  * 	url: {String}
  * 	progressGetter: {Function}
  * 	progressInterval: {Number}
+ * 	onDrop: {Function}
+ * 	onDropFile: {Function}
+ * 	onBeforeUpload: {Function}
  * 	onProgress: {Function}
  * 	onLoad: {Function}
  * 	onError: {Function}
+ * 	onComplete: {Function}
  * }
  */
 var YomFileUploader = function(holder, opt) {
@@ -63,6 +67,8 @@ var YomFileUploader = function(holder, opt) {
 	this._onBeforeUpload = opt.onBeforeUpload || this._onBeforeUpload;
 	this._toBeUploaded = null;
 	this._uploadings = [];
+	this._pendingUploadings = [];
+	this._concurrency = opt.concurrency > 0 ? opt.concurrency : 10;
 	this._bind = {
 		click: function(evt) {return self._onClick(evt);},
 		dragover: function(evt) {return self._onDragover(evt);},
@@ -245,20 +251,19 @@ $.extend(YomFileUploader.prototype, {
 		callback({});
 	},
 
-	_uploadOneDropFile: function(file) {
+	_uploadOneDropFile: function(uploading) {
 		var self = this;
 		var onProgress = this._opt.onProgress;
 		var onLoad = this._opt.onLoad;
 		var onError = this._opt.onError;
 		var onComplete = this._opt.onComplete;
-		var uploading = this._getNewUploading(file.name, 'DROP', file);
 		this._onBeforeUpload(uploading, function(feedback) {
-			var form, url;
+			var file, form, url;
 			if(feedback === false) {
 				return;
 			}
 			feedback = feedback || {};
-			file = feedback.file || file;
+			file = feedback.file || uploading.file;
 			self._uploadings.push(uploading);
 			url = feedback.url || self._url;
 			form = new FormData();
@@ -294,6 +299,11 @@ $.extend(YomFileUploader.prototype, {
 					}
 				};
 				xhr.onloadend = function() {
+					setTimeout(function() {
+						if(self._pendingUploadings.length) {
+							self._uploadOneDropFile(self._pendingUploadings.shift());
+						}
+					}, 0);
 					self._removeUploading(uploading);
 					onComplete && onComplete(uploading);
 				};
@@ -338,11 +348,24 @@ $.extend(YomFileUploader.prototype, {
 
 	uploadByDropFile: function(files) {
 		var self = this;
-		$.each(files, function(i, file) {
-			self._uploadOneDropFile(file);
-			if(!self._enableMultipleSelection) {
-				return false;
-			}
+		var onDropFile = this._opt.onDropFile;
+		var uploadings;
+		if(this._enableMultipleSelection) {
+			uploadings = files.map(function(file) {
+				return self._getNewUploading(file.name, 'DROP', file);
+			});
+		} else {
+			uploadings = [this._getNewUploading(files[0].name, 'DROP', files[0])];
+		}
+		$.each(uploadings, function(i, uploading) {
+			onDropFile && onDropFile(uploading);
+		});
+		if(this.concurrency < uploadings.length) {
+			this._pendingUploadings = this._pendingUploadings.concat(uploadings.slice(this.concurrency));
+			uploadings = uploadings.slice(0, this.concurrency);
+		}
+		$.each(uploadings, function(i, uploading) {
+			self._uploadOneDropFile(uploading);
 		});
 	},
 
@@ -450,6 +473,7 @@ $.extend(YomFileUploader.prototype, {
 			uploading.abort();
 		});
 		this._uploadings = null;
+		this._pendingUploadings = null;
 	}
 });
 
