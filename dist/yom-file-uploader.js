@@ -76,7 +76,7 @@ var YomFileUploader = function(holder, opt) {
 	this._toBeUploaded = null;
 	this._uploadings = [];
 	this._pendingUploadings = [];
-	this._concurrency = opt.concurrency > 0 ? opt.concurrency : 10;
+	this._concurrency = opt.concurrency > 0 ? opt.concurrency : this._enableMultipleSelection ? 10 : 1;
 	this._bind = {
 		click: function(evt) {return self._onClick(evt);},
 		dragover: function(evt) {return self._onDragover(evt);},
