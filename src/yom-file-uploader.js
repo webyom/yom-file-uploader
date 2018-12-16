@@ -89,7 +89,7 @@ $.extend(YomFileUploader.prototype, {
 	_init: function() {
 		if(this._holder.length) {
 			this._area = $([
-				'<div style="position: absolute; left: 0; top: 0; width: 100%; height: 100%; padding: 0; margin: 0; overflow: hidden; background-image: url(about:blank);">',
+				'<div style="position: absolute; left: 0; top: 0; width: 100%; height: 100%; padding: 0; margin: 0; overflow: hidden; background-image: url(about:blank); z-index: 1;">',
 				'</div>'
 			].join('')).appendTo(this._holder);
 			this._holder.css({position: 'relative'});
