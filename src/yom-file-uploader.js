@@ -335,7 +335,9 @@ $.extend(YomFileUploader.prototype, {
 						}
 					}
 				}
-				xhr.withCredentials = true;
+				if(self._opt.withCredentials) {
+					xhr.withCredentials = true;
+				}
 				uploading.abort = function() {
 					xhr.abort();
 					uploading.abort = function() {};
