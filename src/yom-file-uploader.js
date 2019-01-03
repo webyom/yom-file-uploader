@@ -270,17 +270,25 @@ $.extend(YomFileUploader.prototype, {
 			self._uploadings.push(uploading);
 			url = feedback.url || self._url;
 			form = new FormData();
-			form.append(self._fileParamName, file);
 			if(feedback.data) {
 				$.each(feedback.data, function(key, val) {
 					form.append(key, val);
 				});
 			}
+			form.append(self._fileParamName, file);
 			(feedback.xhrGetter || function(callback) {callback();})(function(xhr, headers) {
 				xhr = xhr || new XMLHttpRequest();
 				xhr.onload = function() {
 					var res;
 					if(onLoad) {
+						if (!xhr.responseText && xhr.status === 200) {
+							onLoad(uploading, {
+								code: 0,
+								msg: 'ok',
+								data: feedback.data
+							});
+							return;
+						}
 						try {
 							if('JSON' in window) {
 								res = JSON.parse(xhr.responseText);
