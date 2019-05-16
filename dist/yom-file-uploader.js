@@ -207,6 +207,7 @@ $.extend(YomFileUploader.prototype, {
 			'<input type="file" ',
 				'name="' + this._fileParamName + '" ',
 				this._opt.accept ? 'accept="' + this._opt.accept + '" ' : '',
+				this._opt.capture ? 'capture="' + this._opt.capture + '" ' : '',
 				this._enableMultipleSelection && YomFileUploader.dropFileSupported ? 'multiple' : 'single',
 			' />'
 		].join(''));
