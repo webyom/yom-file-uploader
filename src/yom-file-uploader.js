@@ -1,4 +1,5 @@
 import $ from 'jquery';
+import EXIF from 'exif-js';
 
 function _simulateProgress(lastProgress, startTime, callback) {
 	var interval = 3000;
@@ -123,15 +124,17 @@ $.extend(YomFileUploader.prototype, {
 
 	_onDrop: function(evt) {
 		evt.preventDefault();
-		var files = evt.originalEvent.dataTransfer.files;
-		if(this._opt.onPreview) {
-			this._toBeUploaded = {
-				files: files
-			};
-			this._opt.onPreview(this._toBeUploaded);
-		} else {
-			this.uploadByDropFile(files);
-		}
+		var self = this;
+		this._getFixedFiles(evt.originalEvent.dataTransfer.files, function(files) {
+			if(self._opt.onPreview) {
+				self._toBeUploaded = {
+					files: files
+				};
+				self._opt.onPreview(self._toBeUploaded);
+			} else {
+				self.uploadByDropFile(files);
+			}
+		});
 		if(this._opt.onDrop) {
 			this._opt.onDrop(evt);
 		}
@@ -141,15 +144,17 @@ $.extend(YomFileUploader.prototype, {
 		var fileInput = this._removeFileInput();
 		this._createFileInput();
 		if(YomFileUploader.dropFileSupported) {
-			var files = fileInput[0].files;
-			if(this._opt.onPreview) {
-				this._toBeUploaded = {
-					files: files
-				};
-				this._opt.onPreview(this._toBeUploaded);
-			} else {
-				this.uploadByDropFile(files);
-			}
+			var self = this;
+			this._getFixedFiles(fileInput[0].files, function(files) {
+				if(self._opt.onPreview) {
+					self._toBeUploaded = {
+						files: files
+					};
+					self._opt.onPreview(self._toBeUploaded);
+				} else {
+					self.uploadByDropFile(files);
+				}
+			});
 		} else {
 			if(this._opt.onPreview) {
 				this._toBeUploaded = {
@@ -193,6 +198,109 @@ $.extend(YomFileUploader.prototype, {
 			this._area.off('dragleave', this._bind.dragleave);
 			this._area.off('drop', this._bind.drop);
 		}
+	},
+
+	_dataUrlToBlob: function(dataUrl) {
+		var arr = dataUrl.split(',');
+		var mime = arr[0].match(/:(.*?);/)[1];
+		var bstr = atob(arr[1]);
+		var n = bstr.length;
+		var u8arr = new Uint8Array(n);
+		while(n--) {
+			u8arr[n] = bstr.charCodeAt(n);
+		}
+		return new Blob([u8arr], {type: mime});
+	},
+
+	_fixImageFile: function(file, callback) {
+		var self = this;
+		var reader = new FileReader();
+		reader.onload = function(event) {
+			var img = new Image();
+			img.setAttribute('crossOrigin', 'anonymous');
+			img.onload = function() {
+				EXIF.getData(img, function() {
+					var width = img.width;
+					var height = img.height;
+					var imageOptions = self._opt.imageOptions || {};
+					var scaleWidth, scaleHeight;
+					if(imageOptions.maxWidth > 0) {
+						scaleWidth = width > imageOptions.maxWidth ? imageOptions.maxWidth : width;
+						scaleHeight = scaleWidth * height / width;
+					} else if(imageOptions.maxHeight > 0) {
+						scaleHeight = height > imageOptions.maxHeight ? imageOptions.maxHeight : height;
+						scaleWidth = scaleHeight * width / height;
+					} else {
+						scaleWidth = width;
+						scaleHeight = height;
+					}
+					var orientation = EXIF.getTag(this, 'Orientation');
+					if(orientation !== 3 && orientation !== 6 && orientation !== 8 && scaleWidth == width && scaleHeight == height) {
+						callback(file);
+						return;
+					}
+					var canvas = document.createElement('canvas');
+					var ctx = canvas.getContext('2d');
+					if(orientation === 3) {
+						canvas.width = scaleWidth;
+						canvas.height = scaleHeight;
+						ctx.rotate(Math.PI);
+						ctx.translate(-scaleWidth, -scaleHeight);
+					} else if(orientation === 6) {
+						canvas.width = scaleHeight;
+						canvas.height = scaleWidth;
+						ctx.rotate(Math.PI / 2);
+						ctx.translate(0, -scaleHeight);
+					} else if(orientation === 8) {
+						canvas.width = scaleHeight;
+						canvas.height = scaleWidth;
+						ctx.rotate(-Math.PI / 2);
+						ctx.translate(-scaleWidth, 0);
+					} else {
+						canvas.width = scaleWidth;
+						canvas.height = scaleHeight;
+					}
+					ctx.drawImage(img, 0, 0, scaleWidth, scaleHeight);
+					try {
+						var dataUrl = canvas.toDataURL(img.type || 'image/jpeg', imageOptions.quality > 0 && imageOptions.quality <= 1 ? imageOptions.quality : 1);
+						var blob = self._dataUrlToBlob(dataUrl);
+						blob.name = file.name;
+						callback(blob);
+					} catch(err) {
+						callback(file);
+					}
+				});
+			}
+			img.onerror = function() {
+				callback(file);
+			}
+			img.src = reader.result;
+		};
+		reader.onerror = function() {
+			callback(file);
+		};
+		reader.readAsDataURL(file);
+	},
+
+	_getFixedFiles: function(files, callback) {
+		var self = this;
+		var fixedFiles = [];
+		(function readFile(i) {
+			var file = files[i];
+			if(!(/^image\//i).test(file.type)) {
+				fixedFiles.push(file);
+				readFile(++i);
+				return;
+			}
+			self._fixImageFile(file, function(file) {
+				fixedFiles.push(file);
+				if(i == files.length - 1) {
+					callback(fixedFiles);
+				} else {
+					readFile(++i);
+				}
+			});
+		})(0);
 	},
 
 	_createFileInput: function() {
