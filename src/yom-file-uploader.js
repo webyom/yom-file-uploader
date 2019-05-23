@@ -225,11 +225,21 @@ $.extend(YomFileUploader.prototype, {
 					var imageOptions = self._opt.imageOptions || {};
 					var scaleWidth, scaleHeight;
 					if(imageOptions.maxWidth > 0) {
-						scaleWidth = width > imageOptions.maxWidth ? imageOptions.maxWidth : width;
-						scaleHeight = scaleWidth * height / width;
+						if(orientation === 6 || orientation === 8) {
+							scaleHeight = height > imageOptions.maxWidth ? imageOptions.maxWidth : height;
+							scaleWidth = scaleHeight * width / height;
+						} else {
+							scaleWidth = width > imageOptions.maxWidth ? imageOptions.maxWidth : width;
+							scaleHeight = scaleWidth * height / width;
+						}
 					} else if(imageOptions.maxHeight > 0) {
-						scaleHeight = height > imageOptions.maxHeight ? imageOptions.maxHeight : height;
-						scaleWidth = scaleHeight * width / height;
+						if(orientation === 6 || orientation === 8) {
+							scaleWidth = width > imageOptions.maxHeight ? imageOptions.maxHeight : width;
+							scaleHeight = scaleWidth * height / width;
+						} else {
+							scaleHeight = height > imageOptions.maxHeight ? imageOptions.maxHeight : height;
+							scaleWidth = scaleHeight * width / height;
+						}
 					} else {
 						scaleWidth = width;
 						scaleHeight = height;
