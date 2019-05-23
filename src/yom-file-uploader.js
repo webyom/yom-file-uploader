@@ -200,7 +200,7 @@ $.extend(YomFileUploader.prototype, {
 		}
 	},
 
-	_dataUrlToBlob: function(dataUrl) {
+	_dataUrlToFile: function(dataUrl, fileName) {
 		var arr = dataUrl.split(',');
 		var mime = arr[0].match(/:(.*?);/)[1];
 		var bstr = atob(arr[1]);
@@ -209,7 +209,7 @@ $.extend(YomFileUploader.prototype, {
 		while(n--) {
 			u8arr[n] = bstr.charCodeAt(n);
 		}
-		return new Blob([u8arr], {type: mime});
+		return new File([u8arr], fileName, {type: mime});
 	},
 
 	_fixImageFile: function(file, callback) {
@@ -224,6 +224,7 @@ $.extend(YomFileUploader.prototype, {
 					var height = img.height;
 					var imageOptions = self._opt.imageOptions || {};
 					var scaleWidth, scaleHeight;
+					var orientation = EXIF.getTag(this, 'Orientation');
 					if(imageOptions.maxWidth > 0) {
 						if(orientation === 6 || orientation === 8) {
 							scaleHeight = height > imageOptions.maxWidth ? imageOptions.maxWidth : height;
@@ -244,7 +245,6 @@ $.extend(YomFileUploader.prototype, {
 						scaleWidth = width;
 						scaleHeight = height;
 					}
-					var orientation = EXIF.getTag(this, 'Orientation');
 					if(orientation !== 3 && orientation !== 6 && orientation !== 8 && scaleWidth == width && scaleHeight == height) {
 						callback(file);
 						return;
@@ -273,9 +273,7 @@ $.extend(YomFileUploader.prototype, {
 					ctx.drawImage(img, 0, 0, scaleWidth, scaleHeight);
 					try {
 						var dataUrl = canvas.toDataURL(img.type || 'image/jpeg', imageOptions.quality > 0 && imageOptions.quality <= 1 ? imageOptions.quality : 1);
-						var blob = self._dataUrlToBlob(dataUrl);
-						blob.name = file.name;
-						callback(blob);
+						callback(self._dataUrlToFile(dataUrl, file.name));
 					} catch(err) {
 						callback(file);
 					}
