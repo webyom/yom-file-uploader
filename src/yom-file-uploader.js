@@ -209,7 +209,14 @@ $.extend(YomFileUploader.prototype, {
 		while(n--) {
 			u8arr[n] = bstr.charCodeAt(n);
 		}
-		return new File([u8arr], fileName, {type: mime});
+		var file;
+		try {
+			file = new File([u8arr], fileName, {type: mime});
+		} catch(err) {
+			file = new Blob([u8arr], {type: mime});
+			file.name = fileName;
+		}
+		return file;
 	},
 
 	_fixImageFile: function(file, callback) {
