@@ -223,7 +223,7 @@ $.extend(YomFileUploader.prototype, {
 	},
 
 	_getOptimizedImageFile: function(file, img, width, height, orientation, callback) {
-		var imageOptions = self._opt.imageOptions || {};
+		var imageOptions = this._opt.imageOptions || {};
 		var scaleWidth, scaleHeight;
 		if(imageOptions.maxWidth > 0) {
 			if(orientation === 6 || orientation === 8) {
@@ -286,7 +286,7 @@ $.extend(YomFileUploader.prototype, {
 				}, mime, imageOptions.quality > 0 && imageOptions.quality <= 1 ? imageOptions.quality : 1);
 			} else {
 				var dataUrl = canvas.toDataURL(mime, imageOptions.quality > 0 && imageOptions.quality <= 1 ? imageOptions.quality : 1);
-				callback(self._dataUrlToFile(dataUrl, file.name));
+				callback(this._dataUrlToFile(dataUrl, file.name));
 			}
 		} catch(err) {
 			callback(file);
