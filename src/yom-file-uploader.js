@@ -165,6 +165,9 @@ $.extend(YomFileUploader.prototype, {
 				this.uploadByFileInput(fileInput);
 			}
 		}
+		if(this._opt.onFileChange) {
+			this._opt.onFileChange(evt);
+		}
 	},
 
 	_onFileClick: function(evt) {
