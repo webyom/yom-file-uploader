@@ -302,8 +302,11 @@ $.extend(YomFileUploader.prototype, {
 			var height = exifInfo && exifInfo.PixelYDimension;
 			var orientation = exifInfo.Orientation;
 			if(exifInfo && width && height && typeof createImageBitmap == 'function') {
-				var img = createImageBitmap(new Blob([reader.result], {type: file.type || 'image/jpeg'}), 0, 0, width, height);
-				self._getOptimizedImageFile(file, img, width, height, orientation, callback);
+				createImageBitmap(new Blob([reader.result], {type: file.type || 'image/jpeg'}), 0, 0, width, height).then(function(img) {
+					self._getOptimizedImageFile(file, img, width, height, orientation, callback);
+				}).catch(function() {
+					callback(file);
+				});
 			} else {
 				reader = new FileReader();
 				reader.onload = function() {

@@ -229,7 +229,7 @@ $.extend(YomFileUploader.prototype, {
 	},
 
 	_getOptimizedImageFile: function(file, img, width, height, orientation, callback) {
-		var imageOptions = self._opt.imageOptions || {};
+		var imageOptions = this._opt.imageOptions || {};
 		var scaleWidth, scaleHeight;
 		if(imageOptions.maxWidth > 0) {
 			if(orientation === 6 || orientation === 8) {
@@ -292,7 +292,7 @@ $.extend(YomFileUploader.prototype, {
 				}, mime, imageOptions.quality > 0 && imageOptions.quality <= 1 ? imageOptions.quality : 1);
 			} else {
 				var dataUrl = canvas.toDataURL(mime, imageOptions.quality > 0 && imageOptions.quality <= 1 ? imageOptions.quality : 1);
-				callback(self._dataUrlToFile(dataUrl, file.name));
+				callback(this._dataUrlToFile(dataUrl, file.name));
 			}
 		} catch(err) {
 			callback(file);
@@ -308,8 +308,11 @@ $.extend(YomFileUploader.prototype, {
 			var height = exifInfo && exifInfo.PixelYDimension;
 			var orientation = exifInfo.Orientation;
 			if(exifInfo && width && height && typeof createImageBitmap == 'function') {
-				var img = createImageBitmap(new Blob([reader.result], {type: file.type || 'image/jpeg'}), 0, 0, width, height);
-				self._getOptimizedImageFile(file, img, width, height, orientation, callback);
+				createImageBitmap(new Blob([reader.result], {type: file.type || 'image/jpeg'}), 0, 0, width, height).then(function(img) {
+					self._getOptimizedImageFile(file, img, width, height, orientation, callback);
+				}).catch(function() {
+					callback(file);
+				});
 			} else {
 				reader = new FileReader();
 				reader.onload = function() {
