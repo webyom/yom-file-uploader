@@ -1,5 +1,5 @@
 import $ from 'jquery';
-import EXIF from 'exif-js';
+import {getExifInfo} from './exif';
 
 function _simulateProgress(lastProgress, startTime, callback) {
 	var interval = 3000;
@@ -297,11 +297,11 @@ $.extend(YomFileUploader.prototype, {
 		var self = this;
 		var reader = new FileReader();
 		reader.onload = function() {
-			var exifInfo = EXIF.readFromBinaryFile(reader.result);
-			var width = exifInfo && exifInfo.PixelXDimension;
-			var height = exifInfo && exifInfo.PixelYDimension;
-			var orientation = exifInfo.Orientation;
-			if(exifInfo && width && height && typeof createImageBitmap == 'function') {
+			var exifInfo = getExifInfo(reader.result);
+			var width = exifInfo.width;
+			var height = exifInfo.height;
+			var orientation = exifInfo.orientation;
+			if(width && height && typeof createImageBitmap == 'function') {
 				createImageBitmap(new Blob([reader.result], {type: file.type || 'image/jpeg'}), 0, 0, width, height).then(function(img) {
 					self._getOptimizedImageFile(file, img, width, height, orientation, callback);
 				}).catch(function() {
@@ -315,7 +315,7 @@ $.extend(YomFileUploader.prototype, {
 					img.onload = function() {
 						width = img.width;
 						height = img.height;
-						self._getOptimizedImageFile(file, img, width, height, null, callback);
+						self._getOptimizedImageFile(file, img, width, height, orientation, callback);
 					};
 					img.onerror = function() {
 						callback(file);

@@ -2,10 +2,9 @@ export default {
   entry: 'src/yom-file-uploader.js',
   format: 'umd',
   moduleName: 'YomFileUploader',
-  external: ['jquery', 'exif-js'],
+  external: ['jquery'],
   globals: {
-    jquery: '$',
-    'exif-js': 'EXIF'
+    jquery: '$'
   },
   dest: 'dist/yom-file-uploader.js'
 };
