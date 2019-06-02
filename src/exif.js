@@ -46,22 +46,23 @@ function readTags(dataView, tiffStart, dirStart, strings, bigEnd) {
 }
 
 export function getExifInfo(ab) {
+	var tags = {};
 	var dataView = new DataView(ab);
 	if((dataView.getUint8(0) != 0xFF) || (dataView.getUint8(1) != 0xD8)) {
-		return {};
+		return tags;
 	}
 	var offset = 2;
 	var len = ab.byteLength;
 	var marker;
 	while(offset < len) {
 		if(dataView.getUint8(offset) != 0xFF) {
-			return {};
+			return tags;
 		}
 		marker = dataView.getUint8(offset + 1);
-		if(marker == 225) {
+		if(marker == 0xE1) {
 			offset += 4;
 			if(getStringFromDataView(dataView, offset, 4) != 'Exif') {
-				return {};
+				return tags;
 			}
 			var tiffOffset = offset + 6;
 			var bigEnd;
@@ -70,22 +71,26 @@ export function getExifInfo(ab) {
 			} else if(dataView.getUint16(tiffOffset) == 0x4D4D) {
 				bigEnd = true;
 			} else {
-				return {};
+				return tags;
 			}
-			if(dataView.getUint16(tiffOffset+2, !bigEnd) != 0x002A) {
-				return {};
+			if(dataView.getUint16(tiffOffset + 2, !bigEnd) != 0x002A) {
+				return tags;
 			}
-			var firstIFDOffset = dataView.getUint32(tiffOffset+4, !bigEnd);
+			var firstIFDOffset = dataView.getUint32(tiffOffset + 4, !bigEnd);
 			if(firstIFDOffset < 0x00000008) {
-				return {};
+				return tags;
 			}
-			var tags = readTags(dataView, tiffOffset, tiffOffset + firstIFDOffset, {0x0112 : 'orientation', 0x8769 : 'exifIFDPointer'}, bigEnd);
+			tags = Object.assign(tags, readTags(dataView, tiffOffset, tiffOffset + firstIFDOffset, {0x0112 : 'orientation', 0x8769 : 'exifIFDPointer'}, bigEnd));
 			if(tags.exifIFDPointer) {
 				tags = Object.assign(tags, readTags(dataView, tiffOffset, tiffOffset + tags.exifIFDPointer, {0xA002 : 'width', 0xA003 : 'height'}, bigEnd));
 				delete tags.exifIFDPointer;
 			}
 			return tags;
 		} else {
+			if(marker == 0xC0) {
+				tags['height'] = dataView.getUint16(offset + 5);
+				tags['width'] = dataView.getUint16(offset + 7);
+			}
 			offset += 2 + dataView.getUint16(offset + 2);
 		}
 	}
