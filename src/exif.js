@@ -87,9 +87,11 @@ export function getExifInfo(ab) {
 			}
 			return tags;
 		} else {
-			if(marker == 0xC0) {
+			if(marker == 0xC0 || marker == 0xC2) {
 				tags['height'] = dataView.getUint16(offset + 5);
 				tags['width'] = dataView.getUint16(offset + 7);
+			} else if(marker != 0xE0 && marker != 0xC4 && marker != 0xDB && marker != 0xFE) {
+				return tags;
 			}
 			offset += 2 + dataView.getUint16(offset + 2);
 		}
